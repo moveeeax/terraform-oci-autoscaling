@@ -9,7 +9,7 @@ counts.
 
 ```hcl
 module "autoscaling" {
-  source = "github.com/cybercapybara/terraform-oci-autoscaling"
+  source = "github.com/moveeeax/terraform-oci-autoscaling"
 
   compartment_id   = var.compartment_id
   display_name     = "prod-web-autoscaling"
