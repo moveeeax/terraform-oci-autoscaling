@@ -35,10 +35,12 @@ A runnable example lives in [`examples/basic`](examples/basic).
 
 ## Requirements
 
-| Name      | Version  |
-|-----------|----------|
-| terraform | >= 1.5   |
-| oci       | >= 5.0   |
+| Name      | Version        |
+|-----------|----------------|
+| terraform | >= 1.5         |
+| oci       | >= 5.0, < 9.0  |
+
+Running the test suite additionally requires Terraform >= 1.7 for `mock_provider`.
 
 ## Inputs
 
@@ -55,6 +57,30 @@ A runnable example lives in [`examples/basic`](examples/basic).
 | `scaling_step`         | Number of instances added/removed per action.                     | `number`      | `1`     |    no    |
 | `freeform_tags`        | Free-form tags applied to the configuration.                      | `map(string)` | `{}`    |    no    |
 | `defined_tags`         | Defined tags applied to the configuration, keyed `namespace.key`. | `map(string)` | `{}`    |    no    |
+
+## Validation
+
+A misconfigured threshold policy still applies cleanly — OCI accepts it and it
+simply never does anything useful. The module therefore rejects the following at
+plan time rather than letting you find out in production:
+
+| Rule | Why |
+|------|-----|
+| `scale_out_threshold` must be greater than `scale_in_threshold` | If they overlap or are equal, both rules match at the same CPU utilization and the pool oscillates between scaling out and scaling in. |
+| `scale_out_threshold` and `scale_in_threshold` must be within `0 < x < 100` | These are CPU utilization percentages. A scale-out threshold of `100` or more can never be exceeded, and a scale-in threshold of `0` or less can never be undercut, so that rule never fires. |
+| `scaling_step` must be a whole number >= 1 | `0` produces a policy that applies successfully but never changes the pool size. A negative value swaps the scale-out and scale-in actions. |
+| `capacity` must satisfy `min <= initial <= max`, be whole numbers, and have `max >= 1` | An `initial` outside the bounds or a `max` of `0` leaves the pool in a state the policy cannot correct. |
+| `cool_down_in_seconds` must be a whole number >= 300 | OCI enforces a 300 second floor, and shorter cooldowns cause the pool to thrash. |
+| `compartment_id` and `instance_pool_id` must be OCIDs of the right type | Catches a region name, display name, or the wrong OCID kind being passed by mistake. `compartment_id` also accepts a tenancy OCID for the root compartment. |
+
+## Testing
+
+```
+terraform test
+```
+
+The suite runs against a mocked OCI provider, so it needs no credentials and no
+network access.
 
 ## Outputs
 
