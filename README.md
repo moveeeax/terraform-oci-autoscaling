@@ -9,7 +9,7 @@ counts.
 
 ```hcl
 module "autoscaling" {
-  source = "github.com/moveeeax/terraform-oci-autoscaling"
+  source = "github.com/moveeeax/terraform-oci-autoscaling?ref=v1.0.0"
 
   compartment_id   = var.compartment_id
   display_name     = "prod-web-autoscaling"
@@ -38,7 +38,7 @@ A runnable example lives in [`examples/basic`](examples/basic).
 | Name      | Version        |
 |-----------|----------------|
 | terraform | >= 1.5         |
-| oci       | >= 5.0, < 9.0  |
+| oci       | >= 5.0, < 10.0 |
 
 Running the test suite additionally requires Terraform >= 1.7 for `mock_provider`.
 
